@@ -8,7 +8,7 @@ const {
   validateLoginInput,
   generateInitialPassword
 } = require('../../util/validators')
-const { SECRET_KEY } = require('../../config')
+const SECRET_KEY = process.env.SECRET_KEY
 const Employee = require('../../models/Employees')
 const Activity = require('../../models/Activities')
 
