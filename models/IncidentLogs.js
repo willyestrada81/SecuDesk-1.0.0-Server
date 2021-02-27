@@ -1,6 +1,6 @@
-const { model, Schema } = require('mongoose');
+const { model, Schema } = require('mongoose')
 
-const incidentLogsSchema = new Schema({
+const IncidentLogsSchema = new Schema({
   incidentType: String,
   notes: String,
   createdAt: String,
@@ -13,6 +13,6 @@ const incidentLogsSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'employees'
   }
-});
+})
 
-module.exports = model('incidentLogsSchema', incidentLogsSchema);
+module.exports = model('IncidentLogsSchema', IncidentLogsSchema)

@@ -1,11 +1,12 @@
-const { model, Schema } = require("mongoose");
+const { model, Schema } = require('mongoose')
 
 const employeesSchema = new Schema({
   firstName: String,
   lastName: String,
   organization: String,
-  username: String,
+  token: String,
   password: String,
+  mustResetPassword: Boolean,
   email: String,
   isAdmin: Boolean,
   createdAt: String,
@@ -14,10 +15,11 @@ const employeesSchema = new Schema({
   bio: String,
   jobTitle: String,
   address: String,
-  employee_profilePhoto: String,
+  employeeProfilePhoto: String,
   city: String,
   state: String,
   zip: String,
-});
+  setPasswordUrl: String
+})
 
-module.exports = model("EmployeesSchema", employeesSchema);
+module.exports = model('EmployeesSchema', employeesSchema)

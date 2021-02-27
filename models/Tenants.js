@@ -1,31 +1,51 @@
-const { model, Schema } = require('mongoose');
+const { model, Schema } = require('mongoose')
 
 const tenantsSchema = new Schema({
-  tenant_firstName: String,
-  tenant_lastName: String,
+  tenantFirstName: String,
+  tenantLastName: String,
   tenant_number: Number,
-  tenant_DOB: String,
+  tenantDateOfBirth: String,
   apartment: String,
   moveinDate: String,
-  tenant_phone: String,
-  tenant_email: String,
+  tenantPhone: String,
+  tenantEmail: String,
   createdAt: String,
   createdBy: String,
   employeeId: {
     type: Schema.Types.ObjectId,
     ref: 'employees'
   },
-  tenant_profilePhoto: String,
-  householdMembers: [
+  tenantProfilePhoto: String,
+  assignedParkingSpaces: String,
+  bannedVisitors: [
     {
-      relationship: String,
-      member_firstName: String,
-      member_lastName: String,
-      member_DOB: String,
-      member_phone: String,
+      visitorName: String,
+      visitorId: {
+        type: Schema.Types.ObjectId,
+        ref: 'visitorLogs'
+      },
+      changedDate: String,
+      changedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'employees'
+      }
     }
   ],
-  incident_logs: [
+  permanentVisitors: [
+    {
+      visitorName: String,
+      visitorId: {
+        type: Schema.Types.ObjectId,
+        ref: 'visitorLogs'
+      },
+      changedDate: String,
+      changedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'employees'
+      }
+    }
+  ],
+  incidentLogs: [
     {
       incidentType: String,
       notes: String,
@@ -37,8 +57,8 @@ const tenantsSchema = new Schema({
       }
     }
   ]
-});
+})
 
-tenantsSchema.index({'$**': 'text'});
+tenantsSchema.index({ '$**': 'text' })
 
-module.exports = model('TenantsSchema', tenantsSchema);
+module.exports = model('TenantsSchema', tenantsSchema)

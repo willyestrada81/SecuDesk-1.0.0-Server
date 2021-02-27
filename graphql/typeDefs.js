@@ -1,4 +1,4 @@
-const { gql } = require("apollo-server");
+const { gql } = require('apollo-server')
 
 module.exports = gql`
   type IncidentLog {
@@ -24,39 +24,56 @@ module.exports = gql`
   }
   type Tenant {
     id: ID!
-    tenant_firstName: String!
-    tenant_lastName: String!
-    tenant_DOB: String!
+    tenantFirstName: String!
+    tenantLastName: String!
+    tenantDateOfBirth: String!
     apartment: String!
     moveinDate: String
-    tenant_phone: String!
-    tenant_email: String!
+    tenantPhone: String!
+    tenantEmail: String!
     createdAt: String!
     createdBy: String!
     employeeId: ID!
-    tenant_profilePhoto: String
-    householdMembers: [HouseholdMembers]!
-    incident_logs: [IncidentLog]!
+    tenantProfilePhoto: String
+    incidentLogs: [IncidentLog]!
     incidentCount: Int!
+    visitorCount: Int!
+    bannedVisitors: [Visitor]
+    permanentVisitors: [Visitor]
   }
-  type HouseholdMembers {
-    relationship: String!
-    member_firstName: String!
-    member_lastName: String!
-    member_DOB: String!
-    member_phone: String!
+  
+  type Visitor {
+    visitorName: String!
+    visitorId: ID!
+    changedDate: String!
+    changedBy: ID!
   }
-  type Comment {
+
+  type VisitsLogs {
     id: ID!
-    createdAt: String!
-    username: String!
-    body: String!
+    visitDate: String!
+    createdBy: String!
+    employeeId: ID!
+    tenantId: ID!
   }
-  type Like {
+
+  type VisitorLog {
     id: ID!
-    createdAt: String!
-    username: String!
+    visitorName: String
+    visitorLastName: String
+    createdAt: String
+    notes: String
+    visitsLogs: [VisitsLogs]!
   }
+
+input NewVisitorInputs {
+  visitorName: String!
+  visitorLastName: String!
+  isBanned: Boolean
+  isPermanent: Boolean
+  notes: String
+}
+
   type Employee {
     firstName: String!
     lastName: String!
@@ -64,27 +81,25 @@ module.exports = gql`
     id: ID!
     email: String!
     token: String!
-    username: String!
+    mustResetPassword: Boolean!
     isAdmin: Boolean!
     createdAt: String!
     gender: String!
     hireDate: String!
     bio: String
     jobTitle: String!
-    address: String
+    address: String!
     city: String
     state: String
     zip: String
-    employee_profilePhoto: String
+    employeeProfilePhoto: String
+    setPasswordUrl: String
   }
 
   input RegisterEmployeeInput {
     firstName: String
     lastName: String
     organization: String
-    username: String
-    password: String
-    confirmPassword: String
     email: String
     isAdmin: Boolean
     gender: String
@@ -95,18 +110,23 @@ module.exports = gql`
     city: String
     state: String
     zip: String
-    employee_profilePhoto: String
+    employeeProfilePhoto: String
   }
 
   input RegisterTenantInput {
-    tenant_firstName: String!
-    tenant_lastName: String!
-    tenant_DOB: String!
+    tenantFirstName: String!
+    tenantLastName: String!
+    tenantDateOfBirth: String!
     apartment: String!
     moveinDate: String
-    tenant_phone: String!
-    tenant_email: String!
-    tenant_profilePhoto: String
+    tenantPhone: String!
+    tenantEmail: String!
+    tenantProfilePhoto: String
+  }
+
+  input NewMessageInput {
+    messageSubject: String!
+    messageBody: String!
   }
 
   type Dashboard {
@@ -132,30 +152,77 @@ module.exports = gql`
     encoding: String!
   }
 
+  type Replies {
+    id: ID!
+    createdAt: String
+    replyBody: String
+    employeeIdBy: ID!
+    repliedBy: String
+  }
+
+  type Message {
+    id: ID!
+    messageSubject: String!
+    messageBody: String!
+    createdAt: String
+    createdBy: ID
+    isNewMessage: Boolean
+    isRead: Boolean
+    isReplied: Boolean
+    replyBody: Boolean
+    replies: [Replies]
+  }
+
+  type SystemActivity {
+    id: ID!
+    activityType: String!
+    createdBy: String!
+    createdAt: String!
+    message: String!
+    employeeId: ID
+  }
+
   type Query {
     getIncidentLogs: [IncidentLogs]
     getIncidentLog(tenantId: ID!, incidentLogId: ID!): IncidentLog
-    getTenant(tenantId: ID!): Tenant
     getTenants: [Tenant]
     getDashboard: Dashboard
+    getTenantById(tenantId: ID!): Tenant
+    getMessages: [Message]
+    getMessageById(messageId: ID!): [Message]
+    getSystemActivities: [SystemActivity]
+    getSystemActivityById(activityId: ID!): SystemActivity
+    getEmployeeById(employeeId: ID!): Employee
+    getVisitorLogs: [VisitorLog]
+    getVisitorLog(tenantId: ID!, visitorLogId: ID!): VisitorLog
+    getVisitorsByTenantId(tenantId: ID!): [VisitorLog]
   }
+
   type Mutation {
     registerEmployee(RegisterEmployeeInput: RegisterEmployeeInput): Employee!
-    login(username: String!, password: String!): Employee!
+    registerEmployeeSuperAdmin(RegisterEmployeeInput: RegisterEmployeeInput): Employee!
+    login(email: String!, password: String!): Employee!
     createIncidentLog(tenantId: String!, incidentType: String!, notes: String): Tenant!
     deleteLog(logId: ID!): String!
-    createComment(logId: String!, body: String!): IncidentLog!
-    deleteComment(logId: ID!, commentId: ID!): IncidentLog!
-    likePost(logId: ID!): IncidentLog!
     registerTenant(registerTenantInput: RegisterTenantInput): Tenant!
     deleteTenant(tenantId: String!): String!
     getTenantByApartment(apartment: String!): Tenant
     searchTenants(filter: String!): [Tenant]
     singleUpload(file: Upload!): File
-    getEmployeeById(employeeId: ID!): Employee
     updateEmployee(employeeId: ID!, RegisterEmployeeInput: RegisterEmployeeInput): Employee
+    createMessage(NewMessageInput: NewMessageInput, tenantId: ID!): Message
+    replyMessage(messageId: ID!, replyBody: String!): Message
+    createVisitorLog(tenantId: ID!, NewVisitorInputs: NewVisitorInputs): VisitorLog
+    updateTenantSelf(tenantId: ID!, registerTenantInput: RegisterTenantInput) : Tenant
+    logVisit(tenantId: ID!, visitorId: ID!): VisitorLog
+    banVisitor(tenantId: ID!, visitorId: ID!): Tenant
+    makeVisitorPermanent(tenantId: ID!, visitorId: ID!): Tenant
+    removePermanentVisitor(tenantId: ID!, visitorId: ID!): Tenant
+    removeBannedVisitor(tenantId: ID!, visitorId: ID!): Tenant
+    searchVisitors(filter: String!): [VisitorLog]
   }
+
   type Subscription {
     registerTenant: Tenant!
   }
-`;
+`

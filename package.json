@@ -1,5 +1,5 @@
 {
-  "name": "merng",
+  "name": "secudesk-server-1.0.0",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -21,7 +21,8 @@
     "mongoose": "^5.5.11"
   },
   "devDependencies": {
-    "nodemon": "^1.19.1"
+    "nodemon": "^1.19.1",
+    "standard": "^16.0.3"
   },
   "resolutions": {
     "graphql-upload": "^11.0.0"
