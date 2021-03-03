@@ -182,6 +182,27 @@ input NewVisitorInputs {
     employeeId: ID
   }
 
+  type Packages {
+    id: ID!
+    receivedDate: String!
+    receivedByEmployeeId: ID!
+    receivedByEmployee: String!
+    recipientName: String!
+    recipientId: ID!
+    notes: String
+    isDelivered: Boolean!
+    delivery: Delivery
+  }
+
+  type Delivery {
+    deliveredByEmployeeId: ID
+    receivedByTenantId: ID
+    deliveryDate: String
+    receivedByEmployee: String
+    receivedByTenant: String
+    notes: String
+  }
+
   type Query {
     getIncidentLogs: [IncidentLogs]
     getIncidentLog(tenantId: ID!, incidentLogId: ID!): IncidentLog
@@ -196,13 +217,17 @@ input NewVisitorInputs {
     getVisitorLogs: [VisitorLog]
     getVisitorLog(tenantId: ID!, visitorLogId: ID!): VisitorLog
     getVisitorsByTenantId(tenantId: ID!): [VisitorLog]
+    getTenantVisitLogs(tenantId: ID!, visitorId: ID!): VisitorLog
+    getPackages: [Packages]
+    getPackageById(packageId: ID!): Packages
+    getPackagesByTenantId(tenantId: ID!): [Packages]
   }
 
   type Mutation {
     registerEmployee(RegisterEmployeeInput: RegisterEmployeeInput): Employee!
     registerEmployeeSuperAdmin(RegisterEmployeeInput: RegisterEmployeeInput): Employee!
     login(email: String!, password: String!): Employee!
-    createIncidentLog(tenantId: String!, incidentType: String!, notes: String): Tenant!
+    createIncidentLog(tenantId: String!, incidentType: String!, notes: String): [IncidentLog]
     deleteLog(logId: ID!): String!
     registerTenant(registerTenantInput: RegisterTenantInput): Tenant!
     deleteTenant(tenantId: String!): String!
@@ -220,6 +245,8 @@ input NewVisitorInputs {
     removePermanentVisitor(tenantId: ID!, visitorId: ID!): Tenant
     removeBannedVisitor(tenantId: ID!, visitorId: ID!): Tenant
     searchVisitors(filter: String!): [VisitorLog]
+    createNewPackage(tenantId: ID!, isDelivered: Boolean, notes: String): Packages
+    deliverPackage(packageId: ID!, tenantId: ID!, notes: String): Packages
   }
 
   type Subscription {

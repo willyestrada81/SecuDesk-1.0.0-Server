@@ -73,7 +73,7 @@ module.exports = {
         })
 
         await newActivity.save()
-        return tenant
+        return tenant.incidentLogs
       }
     }
     // async deleteLog(_, { logId }, context) {

@@ -44,6 +44,22 @@ module.exports = {
       } else {
         throw new UserInputError('Visitor or Tenant does not exist')
       }
+    },
+    async getTenantVisitLogs (_, { tenantId, visitorId }, context) {
+      checkAuth(context)
+
+      const tenant = await Tenant.findById(tenantId)
+      const visitor = await VisitorLogs.findById(visitorId)
+      if (tenant && visitor) {
+        const visitLogs = await VisitorLogs.findOne({
+          _id: visitorId,
+          visitsLogs: { $elemMatch: { tenantId: tenantId } }
+        })
+
+        return visitLogs
+      } else {
+        throw new UserInputError('Visitor or Tenant does not exist')
+      }
     }
   },
   Mutation: {

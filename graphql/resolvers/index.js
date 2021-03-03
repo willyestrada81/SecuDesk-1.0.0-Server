@@ -6,6 +6,7 @@ const fileResolvers = require('./file')
 const messageResolvers = require('./messages')
 const systemActivitiesResolvers = require('./systemActivities')
 const visitorLogsResolvers = require('./visitorLogs')
+const packagesResolvers = require('./packages')
 
 module.exports = {
   Tenant: {
@@ -19,7 +20,8 @@ module.exports = {
     ...messageResolvers.Query,
     ...employeesResolvers.Query,
     ...systemActivitiesResolvers.Query,
-    ...visitorLogsResolvers.Query
+    ...visitorLogsResolvers.Query,
+    ...packagesResolvers.Query
   },
   Mutation: {
     ...employeesResolvers.Mutation,
@@ -27,7 +29,8 @@ module.exports = {
     ...tenantsResolvers.Mutation,
     ...fileResolvers.Mutation,
     ...messageResolvers.Mutation,
-    ...visitorLogsResolvers.Mutation
+    ...visitorLogsResolvers.Mutation,
+    ...packagesResolvers.Mutation
 
   },
   Subscription: {
