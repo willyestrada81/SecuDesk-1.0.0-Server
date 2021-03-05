@@ -5,7 +5,7 @@ const Activity = require('../../models/Activities')
 
 module.exports = {
   Query: {
-    async getSystemActivities (_, {}, context) {
+    async getSystemActivities (_, {}, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const activities = await Activity.find()

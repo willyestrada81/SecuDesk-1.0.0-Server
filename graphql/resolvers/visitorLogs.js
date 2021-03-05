@@ -7,7 +7,7 @@ const checkAuth = require('../../util/check-auth')
 
 module.exports = {
   Query: {
-    async getVisitorLogs (_, {}, context) {
+    async getVisitorLogs (_, {}, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const visitorLogs = await VisitorLogs.find().sort({ createdAt: -1 })

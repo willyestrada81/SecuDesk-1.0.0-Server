@@ -8,7 +8,7 @@ const Activity = require('../../models/Activities')
 
 module.exports = {
   Query: {
-    async getTenants (_, {}, context) {
+    async getTenants (_, {}, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const tenants = await Tenant.find()

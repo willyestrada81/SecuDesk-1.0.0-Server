@@ -5,7 +5,7 @@ const checkAuth = require('../../util/check-auth')
 
 module.exports = {
   Query: {
-    async getIncidentLogs (_, {}, context) {
+    async getIncidentLogs (_, {}, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const tenantLogs = await IncidentLog.find().sort({ createdAt: -1 })

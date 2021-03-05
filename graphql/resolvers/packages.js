@@ -7,7 +7,7 @@ const checkAuth = require('../../util/check-auth')
 
 module.exports = {
   Query: {
-    async getPackages (_, { }, context) {
+    async getPackages (_, { }, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const packages = await Packages.find().sort({ receivedDate: -1 })

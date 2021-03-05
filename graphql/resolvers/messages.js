@@ -9,7 +9,7 @@ const Message = require('../../models/Messages')
 
 module.exports = {
   Query: {
-    async getMessages (_, {}, context) {
+    async getMessages (_, {}, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const messages = await Message.find()

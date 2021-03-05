@@ -7,6 +7,7 @@ const messageResolvers = require('./messages')
 const systemActivitiesResolvers = require('./systemActivities')
 const visitorLogsResolvers = require('./visitorLogs')
 const packagesResolvers = require('./packages')
+const customIncidentFields = require('./customIncidentFields')
 
 module.exports = {
   Tenant: {
@@ -21,7 +22,8 @@ module.exports = {
     ...employeesResolvers.Query,
     ...systemActivitiesResolvers.Query,
     ...visitorLogsResolvers.Query,
-    ...packagesResolvers.Query
+    ...packagesResolvers.Query,
+    ...customIncidentFields.Query
   },
   Mutation: {
     ...employeesResolvers.Mutation,
@@ -30,7 +32,8 @@ module.exports = {
     ...fileResolvers.Mutation,
     ...messageResolvers.Mutation,
     ...visitorLogsResolvers.Mutation,
-    ...packagesResolvers.Mutation
+    ...packagesResolvers.Mutation,
+    ...customIncidentFields.Mutation
 
   },
   Subscription: {

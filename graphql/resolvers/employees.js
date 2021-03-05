@@ -1,13 +1,14 @@
 require('dotenv').config()
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { UserInputError } = require('apollo-server')
+const { UserInputError, AuthenticationError } = require('apollo-server')
 const checkAuth = require('../../util/check-auth')
 
 const {
   validateEmail,
   validateLoginInput,
-  generateInitialPassword
+  generateInitialPassword,
+  validateInputs
 } = require('../../util/validators')
 const SECRET_KEY = process.env.SECRET_KEY
 const Employee = require('../../models/Employees')
@@ -22,6 +23,7 @@ function generateToken (employee) {
       firstName: employee.firstName,
       lastName: employee.lastName,
       isAdmin: employee.isAdmin,
+      isSuperAdmin: employee.isSuperAdmin,
       employeeProfilePhoto: employee.employeeProfilePhoto
     },
     SECRET_KEY,
@@ -60,11 +62,11 @@ module.exports = {
         throw new UserInputError('Invalid Email', { errors })
       }
 
-      // const match = await bcrypt.compare(password, employee.password)
-      // if (!match) {
-      //   errors.general = 'Invalid Password'
-      //   throw new UserInputError('Invalid Password', { errors })
-      // }
+      const match = await bcrypt.compare(password, employee.password)
+      if (!match) {
+        errors.general = 'Invalid Password'
+        throw new UserInputError('Invalid Password', { errors })
+      }
 
       const token = generateToken(employee)
 
@@ -95,6 +97,7 @@ module.exports = {
           organization,
           email,
           isAdmin,
+          isSuperAdmin,
           employeeProfilePhoto,
           gender,
           hireDate,
@@ -108,9 +111,9 @@ module.exports = {
       },
       context
     ) {
-      const { firstName: userFirstName, lastName: userLastName, isAdmin: isUserAdmin, id } = checkAuth(context)
+      const { firstName: userFirstName, lastName: userLastName, isSuperAdmin: isEmployeeSuperAdmin, id } = checkAuth(context)
 
-      if (!isUserAdmin) throw new UserInputError('Unauthorized. operation is forbidden')
+      if (!isEmployeeSuperAdmin) throw new AuthenticationError('Unauthorized. operation is forbidden')
       // Validate user data
       const { valid, errors } = validateEmail(
         email
@@ -118,7 +121,7 @@ module.exports = {
       if (!valid) {
         throw new UserInputError('Errors', { errors })
       }
-      // TODO: Make sure user doesnt already exist
+      // TODO: Make sure user doesn't already exist
       const employee = await Employee.findOne({ email })
       if (employee) {
         throw new UserInputError('Username is taken', {
@@ -127,9 +130,7 @@ module.exports = {
           }
         })
       }
-
-      const hashedPassword = await bcrypt.hash(generateInitialPassword, 10)
-
+      const activationCode = generateInitialPassword
       const newEmployee = new Employee({
         firstName,
         lastName,
@@ -147,10 +148,12 @@ module.exports = {
         state,
         zip,
         isAdmin: isAdmin || false,
+        isSuperAdmin: isSuperAdmin || false,
         createdAt: new Date().toISOString(),
-        mustResetPassword: true
-        // password: hashedPassword,
-        // setPasswordUrl: `/reset-password${hashedPassword}`
+        mustResetPassword: true,
+        activationCode,
+        password: null,
+        activationUrl: `/activate-user/${activationCode}`
       })
 
       const res = await newEmployee.save()
@@ -170,69 +173,52 @@ module.exports = {
         id: res._id
       }
     },
-    async registerEmployeeSuperAdmin (
-      _,
-      {
-        RegisterEmployeeInput: {
-          firstName,
-          lastName,
-          organization,
-          email,
-          isAdmin,
-          employeeProfilePhoto,
-          gender,
-          hireDate,
-          bio,
-          jobTitle,
-          address,
-          city,
-          state,
-          zip
-        }
-      }
-    ) {
+    async activateEmployee (_, { activationCode, email }) {
       const { valid, errors } = validateEmail(
         email
       )
       if (!valid) {
         throw new UserInputError('Errors', { errors })
       }
-      // TODO: Make sure user doesnt already exist
-      const employee = await Employee.findOne({ email })
-      if (employee) {
-        throw new UserInputError('Username is taken', {
-          errors: {
-            username: 'This username is taken'
-          }
+      const employee = await Employee.findOne({ activationCode })
+      if (employee && !employee.isActivated) {
+        if (employee.email !== email) throw new UserInputError('Error. Email is not valid. Please enter a valid email.')
+
+        await Employee.findByIdAndUpdate(employee._id, { isActivated: true }, {
+          new: true, useFindAndModify: false
         })
+        return 'Success, employee is activated'
+      } else {
+        throw new UserInputError('Invalid Activation Code or Employee already Activated. Please try again, if error percists, contact your system administrator.')
+      }
+    },
+    async resetPassword (_, { email, password, confirmPassword }) {
+      const { valid, errors } = validateInputs({
+        email,
+        password,
+        confirmPassword
+      })
+      if (!valid) {
+        throw new UserInputError('Errors', { errors })
       }
 
-      const newEmployee = new Employee({
-        firstName,
-        lastName,
-        organization,
-        email,
-        employeeProfilePhoto:
-          employeeProfilePhoto ||
-          'https://secu-desk.s3.amazonaws.com/defaultProfile.png',
-        gender,
-        hireDate: new Date(hireDate).toISOString(),
-        bio,
-        jobTitle,
-        address,
-        city,
-        state,
-        zip,
-        isAdmin: isAdmin || false,
-        createdAt: new Date().toISOString(),
-        mustResetPassword: true,
-        password: generateInitialPassword
-      })
+      if (password !== confirmPassword) {
+        throw new UserInputError('Errors', { errors: { password: 'Passwords do not match' } })
+      }
 
-      const res = await newEmployee.save()
-      return {
-        ...res._doc,
-        id: res._id
+      const employee = await Employee.findOne({ email })
+
+      if (!employee) throw new UserInputError('Invalid email')
+
+      password = await bcrypt.hash(password, 12)
+      try {
+        await Employee.findByIdAndUpdate(employee._id, { password }, {
+          new: true, useFindAndModify: false
+        })
+
+        return employee
+      } catch (err) {
+        throw new Error(err)
       }
     },
     async updateEmployee (_, { employeeId, RegisterEmployeeInput }, context) {
@@ -259,6 +245,74 @@ module.exports = {
         return employee
       } catch (err) {
         throw new Error(err)
+      }
+    },
+    async registerEmployeeSuperAdmin (
+      _,
+      {
+        RegisterEmployeeInput: {
+          firstName,
+          lastName,
+          organization,
+          email,
+          employeeProfilePhoto,
+          gender,
+          hireDate,
+          bio,
+          jobTitle,
+          address,
+          city,
+          state,
+          zip
+        }
+      }
+    ) {
+      const { valid, errors } = validateEmail(
+        email
+      )
+      if (!valid) {
+        throw new UserInputError('Errors', { errors })
+      }
+      const employee = await Employee.findOne({ email })
+      if (employee) {
+        throw new UserInputError('Username is taken', {
+          errors: {
+            username: 'This username is taken'
+          }
+        })
+      }
+      const activationCode = generateInitialPassword
+      const newEmployee = new Employee({
+        firstName,
+        lastName,
+        organization,
+        email,
+        employeeProfilePhoto:
+          employeeProfilePhoto ||
+          'https://secu-desk.s3.amazonaws.com/defaultProfile.png',
+        gender,
+        hireDate: new Date(hireDate).toISOString(),
+        bio,
+        jobTitle,
+        address,
+        city,
+        state,
+        zip,
+        isAdmin: true,
+        isSuperAdmin: true,
+        createdAt: new Date().toISOString(),
+        mustResetPassword: true,
+        activationCode,
+        password: null,
+        activationUrl: `/activate-user/${activationCode}`,
+        isActivated: false
+      })
+
+      const res = await newEmployee.save()
+
+      return {
+        ...res._doc,
+        id: res._id
       }
     }
   }

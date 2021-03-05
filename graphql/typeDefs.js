@@ -83,6 +83,7 @@ input NewVisitorInputs {
     token: String!
     mustResetPassword: Boolean!
     isAdmin: Boolean!
+    isSuperAdmin: Boolean!
     createdAt: String!
     gender: String!
     hireDate: String!
@@ -93,7 +94,10 @@ input NewVisitorInputs {
     state: String
     zip: String
     employeeProfilePhoto: String
-    setPasswordUrl: String
+    activationUrl: String
+    activationCode: String
+    password: String
+    isActivated: Boolean
   }
 
   input RegisterEmployeeInput {
@@ -102,6 +106,7 @@ input NewVisitorInputs {
     organization: String
     email: String
     isAdmin: Boolean
+    isSuperAdmin:Boolean
     gender: String
     hireDate: String
     bio: String
@@ -203,6 +208,14 @@ input NewVisitorInputs {
     notes: String
   }
 
+  type CustomFields {
+    id: ID
+    createdBy: String
+    createdAt: String
+    employeeId: ID
+    fieldName: String
+  }
+
   type Query {
     getIncidentLogs: [IncidentLogs]
     getIncidentLog(tenantId: ID!, incidentLogId: ID!): IncidentLog
@@ -221,6 +234,7 @@ input NewVisitorInputs {
     getPackages: [Packages]
     getPackageById(packageId: ID!): Packages
     getPackagesByTenantId(tenantId: ID!): [Packages]
+    getCustomFields: [CustomFields]
   }
 
   type Mutation {
@@ -247,6 +261,10 @@ input NewVisitorInputs {
     searchVisitors(filter: String!): [VisitorLog]
     createNewPackage(tenantId: ID!, isDelivered: Boolean, notes: String): Packages
     deliverPackage(packageId: ID!, tenantId: ID!, notes: String): Packages
+    createCustomField(fieldName: String!): CustomFields
+    deleteCustomField(fieldName: String!): String
+    resetPassword(email: String!, password: String!, confirmPassword: String!): Employee!
+    activateEmployee(activationCode: String!, email: String!): String!
   }
 
   type Subscription {

@@ -9,6 +9,7 @@ const employeesSchema = new Schema({
   mustResetPassword: Boolean,
   email: String,
   isAdmin: Boolean,
+  isSuperAdmin: Boolean,
   createdAt: String,
   gender: String,
   hireDate: String,
@@ -19,7 +20,9 @@ const employeesSchema = new Schema({
   city: String,
   state: String,
   zip: String,
-  setPasswordUrl: String
+  activationCode: String,
+  activationUrl: String,
+  isActivated: Boolean
 })
 
 module.exports = model('EmployeesSchema', employeesSchema)

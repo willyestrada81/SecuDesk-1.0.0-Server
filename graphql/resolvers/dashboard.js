@@ -13,7 +13,7 @@ const getPercentage = (newNum, originalNum) => {
 
 module.exports = {
   Query: {
-    async getDashboard (_, {}, context) {
+    async getDashboard (_, {}, context) { // eslint-disable-line
       checkAuth(context)
       try {
         const logs = await IncidentLogs.find()
