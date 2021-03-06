@@ -59,5 +59,3 @@ module.exports.validateGetTenant = (fistName, tenantNumber) => {
     valid: Object.keys(errors).length < 1
   }
 }
-
-module.exports.generateInitialPassword = Math.random().toString(36).slice(-8).toLocaleUpperCase()

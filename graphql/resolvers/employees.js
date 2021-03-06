@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid')
 require('dotenv').config()
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -7,7 +8,6 @@ const checkAuth = require('../../util/check-auth')
 const {
   validateEmail,
   validateLoginInput,
-  generateInitialPassword,
   validateInputs
 } = require('../../util/validators')
 const SECRET_KEY = process.env.SECRET_KEY
@@ -40,7 +40,7 @@ module.exports = {
         if (employee) {
           return employee
         } else {
-          throw new UserInputError('No employee found ')
+          throw new UserInputError('No employee found')
         }
       } catch (err) {
         throw new Error(err)
@@ -62,7 +62,7 @@ module.exports = {
         throw new UserInputError('Invalid Email', { errors })
       }
 
-      const match = await bcrypt.compare(password, employee.password)
+      const match = employee.password && await bcrypt.compare(password, employee.password)
       if (!match) {
         errors.general = 'Invalid Password'
         throw new UserInputError('Invalid Password', { errors })
@@ -130,7 +130,7 @@ module.exports = {
           }
         })
       }
-      const activationCode = generateInitialPassword
+      const activationCode = uuidv4()
       const newEmployee = new Employee({
         firstName,
         lastName,
@@ -182,14 +182,14 @@ module.exports = {
       }
       const employee = await Employee.findOne({ activationCode })
       if (employee && !employee.isActivated) {
-        if (employee.email !== email) throw new UserInputError('Error. Email is not valid. Please enter a valid email.')
+        if (employee.email !== email) throw new UserInputError('Errors', { errors: { code: 'Email is not valid. Please enter a valid email.' } })
 
         await Employee.findByIdAndUpdate(employee._id, { isActivated: true }, {
           new: true, useFindAndModify: false
         })
         return 'Success, employee is activated'
       } else {
-        throw new UserInputError('Invalid Activation Code or Employee already Activated. Please try again, if error percists, contact your system administrator.')
+        throw new UserInputError('Errors', { errors: { code: 'Invalid Activation Code or Employee already Activated. Please try again, if error percists, contact your system administrator.' } })
       }
     },
     async resetPassword (_, { email, password, confirmPassword }) {
@@ -281,7 +281,7 @@ module.exports = {
           }
         })
       }
-      const activationCode = generateInitialPassword
+      const activationCode = uuidv4()
       const newEmployee = new Employee({
         firstName,
         lastName,

@@ -16,7 +16,7 @@ module.exports = {
         throw new Error(err)
       }
     },
-    async getPackageById(_, { packageId }, context) {
+    async getPackageById (_, { packageId }, context) {
       checkAuth(context)
       try {
         const singlePackage = await Packages.findById(packageId)
