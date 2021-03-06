@@ -62,6 +62,16 @@ module.exports = {
         throw new UserInputError('Invalid Email', { errors })
       }
 
+      if (employee && !employee.isActivated) {
+        errors.general = 'Please Activate your Account by following the instructions on the email. If no email, contact your system administartor'
+        throw new UserInputError('Please Activate your Account by following the instructions on the email. If no email, contact your system administartor.', { errors })
+      }
+
+      if (employee && employee.mustResetPassword) {
+        errors.general = 'Please setup a password'
+        throw new UserInputError('Please setup a password.', { errors })
+      }
+
       const match = employee.password && await bcrypt.compare(password, employee.password)
       if (!match) {
         errors.general = 'Invalid Password'
@@ -184,7 +194,7 @@ module.exports = {
       if (employee && !employee.isActivated) {
         if (employee.email !== email) throw new UserInputError('Errors', { errors: { code: 'Email is not valid. Please enter a valid email.' } })
 
-        await Employee.findByIdAndUpdate(employee._id, { isActivated: true }, {
+        await Employee.findByIdAndUpdate(employee._id, { isActivated: true, mustResetPassword: false }, {
           new: true, useFindAndModify: false
         })
         return 'Success, employee is activated'
