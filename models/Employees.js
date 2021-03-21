@@ -22,7 +22,14 @@ const employeesSchema = new Schema({
   zip: String,
   activationCode: String,
   activationUrl: String,
-  isActivated: Boolean
+  isActivated: Boolean,
+  status: {
+    isInactive: Boolean,
+    deactivatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'employees'
+    }
+  }
 })
 
 module.exports = model('EmployeesSchema', employeesSchema)

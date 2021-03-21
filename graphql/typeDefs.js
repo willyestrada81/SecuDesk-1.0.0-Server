@@ -98,6 +98,12 @@ input NewVisitorInputs {
     activationCode: String
     password: String
     isActivated: Boolean
+    status: EmployeeStatus
+  }
+
+  type EmployeeStatus {
+    isInactive: Boolean
+    deactivatedBy: ID
   }
 
   input RegisterEmployeeInput {
@@ -217,6 +223,7 @@ input NewVisitorInputs {
   }
 
   type Query {
+    getEmployees: [Employee]
     getIncidentLogs: [IncidentLogs]
     getIncidentLog(tenantId: ID!, incidentLogId: ID!): IncidentLog
     getTenants: [Tenant]
@@ -265,6 +272,7 @@ input NewVisitorInputs {
     deleteCustomField(fieldName: String!): String
     resetPassword(email: String!, password: String!, confirmPassword: String!): Employee!
     activateEmployee(activationCode: String!, email: String!): String!
+    deactivateEmployee(employeeId: ID!, employeeEmail: String!): Employee!
   }
 
   type Subscription {

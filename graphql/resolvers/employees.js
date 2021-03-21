@@ -1,5 +1,7 @@
-const { v4: uuidv4 } = require('uuid')
 require('dotenv').config()
+
+const { v4: uuidv4 } = require('uuid')
+const sgMail = require('@sendgrid/mail')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { UserInputError, AuthenticationError } = require('apollo-server')
@@ -11,6 +13,7 @@ const {
   validateInputs
 } = require('../../util/validators')
 const SECRET_KEY = process.env.SECRET_KEY
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY
 const Employee = require('../../models/Employees')
 const Activity = require('../../models/Activities')
 
@@ -33,6 +36,15 @@ function generateToken (employee) {
 
 module.exports = {
   Query: {
+    async getEmployees (_, { }, context) { // eslint-disable-line
+      checkAuth(context)
+      try {
+        const employees = await Employee.find()
+        return employees
+      } catch (err) {
+        throw new Error(err)
+      }
+    },
     async getEmployeeById (_, { employeeId }, context) {
       checkAuth(context)
       try {
@@ -56,6 +68,11 @@ module.exports = {
       }
 
       const employee = await Employee.findOne({ email })
+
+      if (employee && employee.status.isInactive) {
+        errors.general = 'User is Inactive.'
+        throw new UserInputError('Unable to login. Please contact your system administrator.', { errors })
+      }
 
       if (!employee) {
         errors.general = 'Invalid Email'
@@ -123,7 +140,7 @@ module.exports = {
     ) {
       const { firstName: userFirstName, lastName: userLastName, isSuperAdmin: isEmployeeSuperAdmin, id } = checkAuth(context)
 
-      if (!isEmployeeSuperAdmin) throw new AuthenticationError('Unauthorized. operation is forbidden')
+      if (!isEmployeeSuperAdmin) throw new AuthenticationError('Unauthorized. Operation is forbidden')
       // Validate user data
       const { valid, errors } = validateEmail(
         email
@@ -134,9 +151,9 @@ module.exports = {
       // TODO: Make sure user doesn't already exist
       const employee = await Employee.findOne({ email })
       if (employee) {
-        throw new UserInputError('Username is taken', {
+        throw new UserInputError('Cannot use that email.', {
           errors: {
-            username: 'This username is taken'
+            email: 'Cannot use that email.'
           }
         })
       }
@@ -163,7 +180,9 @@ module.exports = {
         mustResetPassword: true,
         activationCode,
         password: null,
-        activationUrl: `/activate-user/${activationCode}`
+        activationUrl: `/activate-user/${activationCode}`,
+        isActivated: false,
+        isInactive: null
       })
 
       const res = await newEmployee.save()
@@ -177,6 +196,26 @@ module.exports = {
       })
 
       await newActivity.save()
+
+      sgMail.setApiKey(SENDGRID_API_KEY)
+      const msg = {
+        to: newEmployee.email, // Change to your recipient
+        from: 'william.estrada003@mymdc.net', // Change to your verified sender
+        subject: 'Activate account',
+        template_id: 'd-0a186e857a124151aba98877e0bdbd45',
+        dynamic_template_data: {
+          employee_firstName: newEmployee.firstName,
+          activation_url: newEmployee.activationUrl
+        }
+      }
+      sgMail
+        .send(msg)
+        .then(() => {
+          console.log('Email sent')
+        })
+        .catch((error) => {
+          console.error(error)
+        })
 
       return {
         ...res._doc,
@@ -198,6 +237,23 @@ module.exports = {
           new: true, useFindAndModify: false
         })
         return 'Success, employee is activated'
+      } else {
+        throw new UserInputError('Errors', { errors: { code: 'Invalid Activation Code or Employee already Activated. Please try again, if error percists, contact your system administrator.' } })
+      }
+    },
+    async deactivateEmployee (_, { employeeId, employeeEmail }, context) {
+      const { email, isAdmin, id } = checkAuth(context)
+
+      if (!isAdmin) throw new UserInputError('Unauthorized. Operation is forbidden')
+
+      const employee = await Employee.findById(employeeId)
+      if (employee && !employee.status.isInactive) {
+        if (email !== employeeEmail) throw new UserInputError('Errors', { errors: { code: 'Email is not valid. Please enter your email.' } })
+
+        await Employee.findByIdAndUpdate(employee._id, { status: { isInactive: true, deactivatedBy: id } }, {
+          new: true, useFindAndModify: false
+        })
+        return employee
       } else {
         throw new UserInputError('Errors', { errors: { code: 'Invalid Activation Code or Employee already Activated. Please try again, if error percists, contact your system administrator.' } })
       }
