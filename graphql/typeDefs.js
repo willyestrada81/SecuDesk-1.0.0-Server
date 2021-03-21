@@ -122,6 +122,8 @@ input NewVisitorInputs {
     state: String
     zip: String
     employeeProfilePhoto: String
+    mustResetPassword: Boolean
+    password: String
   }
 
   input RegisterTenantInput {

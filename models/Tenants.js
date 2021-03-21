@@ -3,7 +3,6 @@ const { model, Schema } = require('mongoose')
 const tenantsSchema = new Schema({
   tenantFirstName: String,
   tenantLastName: String,
-  tenant_number: Number,
   tenantDateOfBirth: String,
   apartment: String,
   moveinDate: String,

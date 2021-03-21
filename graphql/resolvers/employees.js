@@ -278,7 +278,7 @@ module.exports = {
 
       password = await bcrypt.hash(password, 12)
       try {
-        await Employee.findByIdAndUpdate(employee._id, { password }, {
+        await Employee.findByIdAndUpdate(employee._id, { password, mustResetPassword: false }, {
           new: true, useFindAndModify: false
         })
 
