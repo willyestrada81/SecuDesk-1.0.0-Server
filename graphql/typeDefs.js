@@ -143,18 +143,12 @@ input NewVisitorInputs {
   }
 
   type Dashboard {
-    visitor: [IncidentLogs]
-    repairs: [IncidentLogs]
-    delivery: [IncidentLogs]
     incidentsLastHour: [IncidentLogs]
     incidentsBeforeLastHour: [IncidentLogs]
     incidentsLast24Hours: [IncidentLogs]
     incidentsBeforeLast24Hours: [IncidentLogs]
     percentageOfIncreaseByHour: Float
     percentageOfIncreaseBy24Hours: Float
-    percentageDelivery: Float
-    percentageVisitor: Float
-    percentageRepairs: Float
   }
 
   type File {

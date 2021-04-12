@@ -59,29 +59,14 @@ module.exports = {
           incidentsBeforeLast24Hours.length
         )
 
-        const delivery = logs.filter(d => d.incidentType === 'Delivery' && moment(d.createdAt).isAfter(moment().startOf('day')))
-        const visitor = logs.filter(d => d.incidentType === 'Visitor' && moment(d.createdAt).isAfter(moment().startOf('day')))
-        const repairs = logs.filter(d => d.incidentType === 'Repairs' && moment(d.createdAt).isAfter(moment().startOf('day')))
-
-        const total = visitor.length + delivery.length + repairs.length
-
-        const percentageDelivery = total === 0 ? 0 : ((delivery.length / total) * 100).toFixed(2)
-        const percentageVisitor = total === 0 ? 0 : ((visitor.length / total) * 100).toFixed(2)
-        const percentageRepairs = total === 0 ? 0 : ((repairs.length / total) * 100).toFixed(2)
-
         return {
           incidentsLastHour,
           incidentsBeforeLastHour,
           incidentsLast24Hours,
           incidentsBeforeLast24Hours,
           percentageOfIncreaseByHour,
-          percentageOfIncreaseBy24Hours,
-          delivery,
-          visitor,
-          repairs,
-          percentageDelivery,
-          percentageVisitor,
-          percentageRepairs
+          percentageOfIncreaseBy24Hours
+
         }
       } catch (err) {
         throw new Error(err)
